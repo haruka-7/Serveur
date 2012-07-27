@@ -11,7 +11,7 @@
 # Start Netfilter configuration at boot time
 #---------------------------------------
 # 23/04/2012
-# version : 1.0
+# version : 1.1
 # licence : Creative Commons (CC-by-nc)
 #
 # written by Pedro CADETE - http://p3ter.fr 
@@ -123,7 +123,12 @@ echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
 #iptables -A FORWARD -j REJECT
 #iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
 
+# ------
+# VNC
+#iptables -A INPUT -p tcp --dport 5901 -j ACCEPT
+
 }
+
 
 ## ----------------------
 ## STOP FIREWALL 
