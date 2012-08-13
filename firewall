@@ -10,8 +10,8 @@
 #---------------------------------------
 # Start Netfilter configuration at boot time
 #---------------------------------------
-# 23/04/2012
-# version : 1.1
+# 13/08/2012
+# version : 1.2
 # licence : Creative Commons (CC-by-nc)
 #
 # written by Pedro CADETE - http://p3ter.fr 
@@ -33,13 +33,6 @@ UDP_SERVICES=""
 # Services the system will use from the network
 REMOTE_TCP_SERVICES="80 443"
 REMOTE_UDP_SERVICES="53"
-
-# Network that will be used for remote management
-# (if undefined, no rules will be setup)
-#NETWORK_MGMT=192.168.0.0/24
-# Port used for the SSH service, define this is you have setup a
-# management network but remove it from TCP_SERVICES
-#SSH_PORT="22"
 
 
 ## ----------------------
@@ -82,14 +75,6 @@ done
 fi
 
 # ------
-# Remote management
-if [ -n "$NETWORK_MGMT" ] ; then
- /sbin/iptables -A INPUT -p tcp --src ${NETWORK_MGMT} --dport ${SSH_PORT} -j ACCEPT
-else 
- /sbin/iptables -A INPUT -p tcp --dport ${SSH_PORT}  -j ACCEPT
-fi
-
-# ------
 # ICMP (ping)
 /sbin/iptables -A OUTPUT -p icmp -j ACCEPT
 /sbin/iptables -A INPUT -p icmp -j ACCEPT
@@ -117,11 +102,11 @@ echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
 
 # ------
 # OpenVPN
-#echo 1 > /proc/sys/net/ipv4/ip_forward
-#iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
-#iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT
-#iptables -A FORWARD -j REJECT
-#iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT
+iptables -A FORWARD -j REJECT
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
 
 # ------
 # VNC
