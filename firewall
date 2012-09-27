@@ -112,6 +112,10 @@ echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
 # VNC
 #iptables -A INPUT -p tcp --dport 5901 -j ACCEPT
 
+# ------
+# MINGLE
+#iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
+
 }
 
 
