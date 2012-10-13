@@ -1,0 +1,118 @@
+### BEGIN INIT INFO
+# Provides:          libvirt-domains
+# Required-Start:    $network $local_fs libvirt-bin
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: automatic domain management
+### END INIT INFO
+
+#!/bin/sh
+#---------------------------------------
+# Save and restore virtuals machines
+#---------------------------------------
+# 13/10/2012
+# version : 1.0
+# licence : Creative Commons (CC-by-nc)
+#
+# written by Pedro CADETE - http://p3ter.fr
+# original script from Dean Holland - dean.holland@gmail.com
+
+VIRSH="/usr/bin/virsh"
+SAVEDIR="/var/lib/libvirt/save"
+
+###############################################################
+# Functions
+# -------------------------------------------------------------
+find_domains_run() {
+        echo "Searching for running virtuals machines..."
+        VMID=`virsh list | grep "en cours d'exécution" | awk '{print $2}'`
+}
+
+find_domains_stop() {
+        echo "Searching stoped virtuals machines..."
+        VMID=`virsh list --all | grep "fermé" | awk '{print $2}'`
+}
+
+save_domain() {
+        echo "Saving domain $1..."
+        $VIRSH save $1 $SAVEDIR/$1 2>/dev/null
+}
+restore_domain() {
+        echo "Restoring domain $1..."
+        $VIRSH restore $SAVEDIR/$1
+}
+start_domain() {
+        echo "Starting domain $1..."
+        $VIRSH start $1
+}
+check_state() {
+        getstate=`$VIRSH domstate $1 2>/dev/null | head -n 1`
+        if [ "$getstate" = "en cours d'exécution" ];
+        then
+                return 0
+        else
+                return 1
+        fi
+}
+
+###############################################################
+# The script start here
+# -------------------------------------------------------------
+do_stop() {
+        find_domains_run
+        # Save all VM in running state 
+        for domain in $VMID;
+        do
+                save_domain $domain
+        done
+}
+
+do_start() {
+        find_domains_stop
+        # restore all VM which were saved 
+        for domain in $VMID;
+        do
+                # Check that a save state file exists
+                if [ -f $SAVEDIR/$domain ];
+                then
+                        counter=0
+                        # Try 3 times to resume the domain
+                        while [ $counter -lt 3 ]
+                        do
+                                restore_domain $domain
+                                check_state $domain
+                                if [ $? -eq 0 ];
+                                then
+                                        counter=3
+                                fi
+                                counter=$((counter+1))
+                                sleep 5
+                        done
+                        rm -f $SAVEDIR/$domain
+                fi
+                # Check if the domain is now running, if not start it from scratch
+                check_state $domain
+                if [ $? -eq 1 ];
+                then
+                        echo "Could not restore domain $domain, starting instead..."
+                        start_domain $domain
+                fi
+        done
+}
+
+###############################################################
+# Init
+# -------------------------------------------------------------
+case $1 in
+        start)
+                do_start
+                ;;
+        stop)
+                do_stop
+                ;;
+        *)
+                echo "Usage: $0 {start|stop}"
+                ;;
+
+esac
