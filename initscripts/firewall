@@ -1,0 +1,166 @@
+### BEGIN INIT INFO
+# Provides:          firewall
+# Required-Start:    $syslog $network
+# Required-Stop:     $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+
+#!/bin/sh
+#---------------------------------------
+# Start Netfilter configuration at boot time
+#---------------------------------------
+# 07/10/2012
+# version : 1.3.1
+# licence : Creative Commons (CC-by-nc)
+#
+# written by Pedro CADETE - http://p3ter.fr 
+# fork from Nicolas Hennion - http://blog.nicolargo.com/
+#
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+if ! [ -x /sbin/iptables ]; then  
+ exit 0
+fi
+
+## ----------------------
+## FIREWALL CONFIGURATION
+## ----------------------
+
+# Services that the system will offer to the network
+# Shinken : 7767
+# Mingle : 8080
+# VNC : 5901
+TCP_SERVICES="22 80 443" 
+UDP_SERVICES=""
+
+# Services the system will use from the network
+REMOTE_TCP_SERVICES="80 443"
+REMOTE_UDP_SERVICES="53"
+
+
+## ----------------------
+## START FIREWALL 
+## ----------------------
+fw_start () {
+
+# ------
+# Input traffic
+/sbin/iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+if [ -n "$TCP_SERVICES" ] ; then
+for PORT in $TCP_SERVICES; do
+ /sbin/iptables -A INPUT -p tcp --dport ${PORT} -j ACCEPT
+done
+fi
+
+if [ -n "$UDP_SERVICES" ] ; then
+for PORT in $UDP_SERVICES; do
+ /sbin/iptables -A INPUT -p udp --dport ${PORT} -j ACCEPT
+done
+fi
+
+# ------
+# Output
+/sbin/iptables -A OUTPUT -j ACCEPT -o lo 
+/sbin/iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+/sbin/iptables -A OUTPUT -p tcp -d security.debian.org --dport 80 -j ACCEPT 
+
+if [ -n "$REMOTE_TCP_SERVICES" ] ; then
+for PORT in $REMOTE_TCP_SERVICES; do
+ /sbin/iptables -A OUTPUT -p tcp --dport ${PORT} -j ACCEPT
+done
+fi
+
+if [ -n "$REMOTE_UDP_SERVICES" ] ; then
+for PORT in $REMOTE_UDP_SERVICES; do
+ /sbin/iptables -A OUTPUT -p udp --dport ${PORT} -j ACCEPT
+done
+fi
+
+# ------
+# ICMP (ping)
+/sbin/iptables -A OUTPUT -p icmp -j ACCEPT
+/sbin/iptables -A INPUT -p icmp -j ACCEPT
+/sbin/iptables -A INPUT -i lo -j ACCEPT
+/sbin/iptables -P INPUT DROP
+/sbin/iptables -A INPUT -j LOG
+
+# ------
+# Syslog
+/sbin/iptables -A OUTPUT -j LOG
+/sbin/iptables -A OUTPUT -j REJECT 
+/sbin/iptables -P OUTPUT DROP
+
+# ------
+# Other network protections
+# (some will only work with some kernel versions)
+echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+echo 0 > /proc/sys/net/ipv4/ip_forward 
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts 
+echo 1 > /proc/sys/net/ipv4/conf/all/log_martians 
+echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses
+echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter
+echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects
+echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
+
+# ------
+# OpenVPN
+#echo 1 > /proc/sys/net/ipv4/ip_forward
+#iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+#iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT
+#iptables -A FORWARD -j REJECT
+#iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+
+
+}
+
+
+## ----------------------
+## STOP FIREWALL 
+## ----------------------
+fw_stop () {
+/sbin/iptables -F
+/sbin/iptables -t nat -F
+/sbin/iptables -t mangle -F
+/sbin/iptables -P INPUT DROP
+/sbin/iptables -P FORWARD DROP
+/sbin/iptables -P OUTPUT ACCEPT
+}
+
+## ----------------------
+## CLEAR FIREWALL 
+## ----------------------
+fw_clear () {
+/sbin/iptables -F
+/sbin/iptables -t nat -F
+/sbin/iptables -t mangle -F
+/sbin/iptables -P INPUT ACCEPT
+/sbin/iptables -P FORWARD ACCEPT
+/sbin/iptables -P OUTPUT ACCEPT
+}
+
+
+#######################
+case "$1" in
+	start|restart)
+		echo -n "Starting firewall.."
+		fw_stop 
+		fw_start
+		echo "done."
+	;;
+stop)
+		echo -n "Stopping firewall.."
+		fw_stop
+		echo "done."
+	;;
+clear)
+		echo -n "Clearing firewall rules.."
+		fw_clear
+		echo "done."
+	;;
+*)
+		echo "Usage: $0 {start|stop|restart|clear}"
+		exit 1
+	;;
+esac
+exit 0
