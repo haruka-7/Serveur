@@ -10,9 +10,9 @@
 #---------------------------------------
 # Start Netfilter configuration at boot time
 #---------------------------------------
-# 07/10/2012
-# version : 1.3.1
-# licence : Creative Commons (CC-by-nc)
+# 24/12/2012
+# version : 1.3
+# licence : Creative Commons (CC-by)
 #
 # written by Pedro CADETE - http://p3ter.fr 
 # fork from Nicolas Hennion - http://blog.nicolargo.com/
@@ -27,9 +27,6 @@ fi
 ## ----------------------
 
 # Services that the system will offer to the network
-# Shinken : 7767
-# Mingle : 8080
-# VNC : 5901
 TCP_SERVICES="22 80 443" 
 UDP_SERVICES=""
 
@@ -64,6 +61,7 @@ fi
 /sbin/iptables -A OUTPUT -j ACCEPT -o lo 
 /sbin/iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 /sbin/iptables -A OUTPUT -p tcp -d security.debian.org --dport 80 -j ACCEPT 
+#/sbin/iptables -A OUTPUT -p tcp -d github.com --dport 22 -j ACCEPT
 
 if [ -n "$REMOTE_TCP_SERVICES" ] ; then
 for PORT in $REMOTE_TCP_SERVICES; do
@@ -105,12 +103,19 @@ echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
 
 # ------
 # OpenVPN
-#echo 1 > /proc/sys/net/ipv4/ip_forward
-#iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
-#iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT
-#iptables -A FORWARD -j REJECT
-#iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT
+iptables -A FORWARD -j REJECT
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
 
+# ------
+# VNC
+#iptables -A INPUT -p tcp --dport 5901 -j ACCEPT
+
+# ------
+# MINGLE
+#iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
 
 }
 
