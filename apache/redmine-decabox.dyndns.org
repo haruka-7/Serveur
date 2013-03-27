@@ -1,8 +1,0 @@
-<VirtualHost *:80>
-	ServerName decabox.dyndns.org
-	DocumentRoot /usr/local/share/redmine/public
-	<Directory /usr/local/share/redmine/public>
-		AllowOverride all
-		Options -MultiViews
-	</Directory>
-</VirtualHost>
