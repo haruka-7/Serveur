@@ -1,0 +1,20 @@
+server {
+    listen       80;
+    server_name  localhost;
+    root         /var/www/;
+
+    access_log /var/log/nginx/localhost.access.log;
+    error_log /var/log/nginx/localhost.error.log;
+
+    # Static
+    location / {
+        autoindex on;
+    }
+
+
+    # Security
+    location ~ /\.ht {
+        deny  all;
+    }
+
+}
