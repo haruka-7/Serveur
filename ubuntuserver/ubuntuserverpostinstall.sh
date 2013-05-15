@@ -32,7 +32,7 @@ apt-get update
 
 # Upgrade
 echo "Mise a jour du systeme"
-apt-get safe-upgrade
+apt-get dist-upgrade
 
 # Installation
 echo "Installation des logiciels suivants: $LISTE"
