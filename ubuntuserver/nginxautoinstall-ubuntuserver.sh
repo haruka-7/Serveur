@@ -3,20 +3,20 @@
 # My own script to install/upgrade, on Ubuntu Server, NGinx+PHP5_FPM from sources
 #
 # By P3ter - p3ter.fr
-# CCBY V3
+# CCBY V4
 #
 # Fork from Nicolargo's script
 #
 # Syntaxe: # su - -c "./nginxautoinstall.sh"
 # Syntaxe: or # sudo ./nginxautoinstall.sh
 #
-VERSION="1.1.1"
+VERSION="1.1.3"
 
 ##############################
 # Version de NGinx a installer
 
-NGINX_VERSION="1.5.1"   # The dev version
-#NGINX_VERSION="1.4.0"   # The stable version
+NGINX_VERSION="1.5.8"   # The dev version
+#NGINX_VERSION="1.4.4"    # The stable version
 
 ###############################
 # Liste des modules a installer
