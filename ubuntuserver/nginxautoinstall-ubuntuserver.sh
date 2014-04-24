@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# My own script to install/upgrade, on Ubuntu Server, NGinx+PHP5_FPM from sources
+# My own script to install/upgrade, on Ubuntu Server, NGinx from sources and PHP from official repository
 #
 # By P3ter - p3ter.fr
 # CCBY V4
@@ -10,7 +10,7 @@
 # Syntaxe: # su - -c "./nginxautoinstall.sh"
 # Syntaxe: or # sudo ./nginxautoinstall.sh
 #
-VERSION="1.2"
+VERSION="1.2.1"
 
 ##############################
 # Version de NGinx a installer
@@ -181,7 +181,7 @@ echo "iptables -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT"
 echo "iptables -A INPUT  -p tcp --dport http -j ACCEPT"
 echo ""
 echo "If you want to manage your PHP session with Redis,"
-echo "just add this two line in the /etc/php5/fpm/php.ini file:"
+echo "just add this two lines in the /etc/php5/fpm/php.ini file:"
 echo "  session.save_handler = redis"
 echo "  session.save_path = \"tcp://127.0.0.1:6379?weight=1\""
 echo "------------------------------------------------------------------------------"
