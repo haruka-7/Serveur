@@ -15,7 +15,7 @@ VERSION="1.2.6"
 ##############################
 # Version de NGinx a installer
 
-NGINX_VERSION="1.9.3"   # The mainline version
+NGINX_VERSION="1.9.6"   # The mainline version
 #NGINX_VERSION="1.8.0"    # The stable version
 
 ###############################
